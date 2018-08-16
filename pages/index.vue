@@ -13,12 +13,39 @@
         <p>{{ host }}</p>
         <button v-on:click="reverseMessage">Reverse Message</button>
       </div>
+      <!-- <div>
+  <ul> 
+  <li v-for = "(item, index) in init" :key = "index"> 
+  {{item.id}}: {{item.name}} 
+  </li> 
+  </ul>         
+      </div> -->
+  <div id="form">
+    <div>
+      <input type="text"
+        v-model="newItem"
+        @keyup.enter="addItem">
+      <button  @click="addItem">
+        Add Item
+      </button>
+    </div>
+    <ul class="itemList">
+      <li v-for="(item,index) in items" :key = "index">
+        {{ item.name }} -
+        <button @click="deleteItem(item)">
+          Remove
+        </button>
+      </li>
+    </ul>
+  </div>      
     </div>
   </section>
 </template>
 
 <script>
 import AppLogo from '~/components/AppLogo.vue'
+import {mapGetters} from 'vuex'
+import db from '~/plugins/firebaseInit'
 
 export default {
   components: {
@@ -27,14 +54,38 @@ export default {
   data: function() {
     return {
       message: 'HareKrishna',
-      host : (process.server ? 'server' : 'client')
+      host : (process.server ? 'server' : 'client'),
+        items: [],
+        newItem: ''      
     }
   },  
+    firestore() {
+      return {
+        items: db.collection('items'),
+      }
+    },
   methods: {
   reverseMessage: function () {
     this.message = this.message.split('').reverse().join('')
-    }
-  }
+    },
+      addItem: function() {
+        this.$firestore.items.add(
+          {
+            name: this.newItem,
+            timestamp: new Date()
+          }
+        );
+        this.newItem = '';
+      },
+      deleteItem: function(item) {
+        this.$firestore.items.doc(item['.key']).delete();
+      }    
+  },
+ computed: { 
+  ... mapGetters ({ 
+  init: 'getItems' 
+  }) 
+  }   
 }
 </script>
 
